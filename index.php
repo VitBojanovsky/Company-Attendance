@@ -68,12 +68,7 @@ $conn->query($sql);
 
 $result = $conn->query("SELECT * FROM testovaqi_table");
 while($row = $result->fetch_assoc()) {
-    echo $row['name'] . "<br>";
+    echo $row['id'] . " " . $row['name'] . " " . $row['email'] . " " . $row['create_time'] . "<br>";
 }
 
-$sql = "UPDATE testovaqi_table SET name='Jane' WHERE id=1";
-$conn->query($sql);
-
-$sql = "DELETE FROM testovaqi_table WHERE id=1";
-$conn->query($sql);
 ?>
