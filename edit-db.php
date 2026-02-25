@@ -21,6 +21,7 @@ function loadEnv($path) {
 }
 
 
+
 loadEnv(__DIR__ . '/.env');
 $servername = $_ENV['DB_SERVERNAME'];
 $username = $_ENV['DB_USERNAME'];
@@ -63,12 +64,21 @@ if ($conn->query($sql) === TRUE) {
     echo "Error creating table: " . $conn->error;
 }
 
-$sql = "INSERT INTO testovaqi_table (name, email) VALUES ('John', 'john@example.com')";
+$id = $_POST['id'] ?? '';
+$username = $_POST['name_to_update'] ?? '';
+$email = $_POST['email_to_update'] ?? '';
+
+
+$sql = "UPDATE testovaqi_table SET name='$username', email='$email' WHERE id=$id";
 $conn->query($sql);
+
+
+
 
 $result = $conn->query("SELECT * FROM testovaqi_table");
 while($row = $result->fetch_assoc()) {
     echo $row['id'] . " " . $row['name'] . " " . $row['email'] . " " . $row['create_time'] . "<br>";
 }
+
 
 ?>
