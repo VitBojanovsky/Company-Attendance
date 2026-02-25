@@ -64,6 +64,9 @@ if ($conn->query($sql) === TRUE) {
     echo "Error creating table: " . $conn->error;
 }
 
+$sql = "ALTER TABLE testovaqi_table ADD COLUMN user_type VARCHAR(255) COMMENT '' AFTER `email`";
+$conn->query($sql);
+
 /*
 $sql = "INSERT INTO testovaqi_table (name, email) VALUES ('John', 'john@example.com')";
 $conn->query($sql);
@@ -71,7 +74,8 @@ $conn->query($sql);
 
 $username = $_POST['name'] ?? '';
 $email = $_POST['email'] ?? '';
-$sql = "INSERT INTO testovaqi_table (name, email) VALUES ('$username', '$email')";
+$userType = $_POST['user-type'] ?? '';
+$sql = "INSERT INTO testovaqi_table (name, email, user_type) VALUES ('$username', '$email', '$userType')";
 $conn->query($sql);
 
 
@@ -79,7 +83,7 @@ $conn->query($sql);
 
 $result = $conn->query("SELECT * FROM testovaqi_table");
 while($row = $result->fetch_assoc()) {
-    echo $row['id'] . " " . $row['name'] . " " . $row['email'] . " " . $row['create_time'] . "<br>";
+    echo $row['id'] . " " . $row['name'] . " " . $row['email'] . " " . $row['user_type'] . " " . $row['create_time'] . "<br>";
 }
 
 
