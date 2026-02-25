@@ -50,4 +50,19 @@ if ($conn->connect_error) {
 }
 
 echo "Connected to database successfully!<br>";
+
+
+$sql = "INSERT INTO employees (name, email) VALUES ('John', 'john@example.com')";
+$conn->query($sql);
+
+$result = $conn->query("SELECT * FROM employees");
+while($row = $result->fetch_assoc()) {
+    echo $row['name'];
+}
+
+$sql = "UPDATE employees SET name='Jane' WHERE id=1";
+$conn->query($sql);
+
+$sql = "DELETE FROM employees WHERE id=1";
+$conn->query($sql);
 ?>
