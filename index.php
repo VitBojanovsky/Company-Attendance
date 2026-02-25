@@ -20,8 +20,8 @@ function loadEnv($path) {
     }
 }
 
-loadEnv(__DIR__ . '/.env');
 
+loadEnv(__DIR__ . '/.env');
 $servername = $_ENV['DB_SERVERNAME'];
 $username = $_ENV['DB_USERNAME'];
 $password = $_ENV['DB_PASSWORD'];
@@ -51,18 +51,29 @@ if ($conn->connect_error) {
 
 echo "Connected to database successfully!<br>";
 
-
-$sql = "INSERT INTO employees (name, email) VALUES ('John', 'john@example.com')";
-$conn->query($sql);
-
-$result = $conn->query("SELECT * FROM employees");
-while($row = $result->fetch_assoc()) {
-    echo $row['name'];
+$sql = "CREATE TABLE IF NOT EXISTS testovaqi_table (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+)";
+if ($conn->query($sql) === TRUE) {
+    echo "Table created successfully or already exists.<br>";
+} else {
+    echo "Error creating table: " . $conn->error;
 }
 
-$sql = "UPDATE employees SET name='Jane' WHERE id=1";
+$sql = "INSERT INTO testovaqi_table (name, email) VALUES ('John', 'john@example.com')";
 $conn->query($sql);
 
-$sql = "DELETE FROM employees WHERE id=1";
+$result = $conn->query("SELECT * FROM testovaqi_table");
+while($row = $result->fetch_assoc()) {
+    echo $row['name'] . "<br>";
+}
+
+$sql = "UPDATE testovaqi_table SET name='Jane' WHERE id=1";
+$conn->query($sql);
+
+$sql = "DELETE FROM testovaqi_table WHERE id=1";
 $conn->query($sql);
 ?>
