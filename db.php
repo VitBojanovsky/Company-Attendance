@@ -64,9 +64,10 @@ if ($conn->query($sql) === TRUE) {
     echo "Error creating table: " . $conn->error;
 }
 
+/*
 $sql = "ALTER TABLE testovaqi_table ADD COLUMN user_type VARCHAR(255) COMMENT '' AFTER `email`";
 $conn->query($sql);
-
+*/
 /*
 $sql = "INSERT INTO testovaqi_table (name, email) VALUES ('John', 'john@example.com')";
 $conn->query($sql);
