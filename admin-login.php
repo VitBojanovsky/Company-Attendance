@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 function loadEnv($path) {
     if (!file_exists($path)) {
         throw new Exception('.env file not found');
@@ -23,10 +25,10 @@ function loadEnv($path) {
 try {
     loadEnv(__DIR__ . '/.env');
     $servername = $_ENV['DB_SERVERNAME'];
-    $username = $_ENV['DB_USERNAME'];
-    $password = $_ENV['DB_PASSWORD'];
+    $username_db = $_ENV['DB_USERNAME'];
+    $password_db = $_ENV['DB_PASSWORD'];
     $dbname = $_ENV['DB_NAME'];
-    $conn = new mysqli($servername, $username, $password, $dbname);
+    $conn = new mysqli($servername, $username_db, $password_db, $dbname);
     if ($conn->connect_error) {
         die("Connection to database failed: " . $conn->connect_error);
     }
@@ -48,9 +50,8 @@ $username = $_POST['username'] ?? '';
 $password = $_POST['password'] ?? '';
 
 if($username === 'admin' && $password === 'admin123') {
-    session_start();   
     $_SESSION['logged_in'] = true;
-} else {
+} else if ($username !== '' || $password !== '') {
     echo "Invalid username or password.";
 }
 
