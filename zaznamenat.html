@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zaznamenat dochazku</title>
+</head>
+<body>
+    <h1>Zaznamenat dochazku</h1>
+    <form action="zaznamenat.php" method="post">
+        <label for="employee_id">ID Zaměstnance:</label>
+        <input type="text" id="employee_id" name="employee_id" required><br><br>
+        
+        <label for="name">Jméno:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="date">Datum:</label>
+        <input type="date" id="date" name="date" required><br><br>
+        
+        <label for="time_in">Příchod:</label>
+        <input type="time" id="time_in" name="time_in" required><br><br>
+        
+        <label for="time_out">Odchod:</label>
+        <input type="time" id="time_out" name="time_out"><br><br>
+        
+        <input type="submit" value="Zaznamenat">
+    </form>
+</body>
+</html>

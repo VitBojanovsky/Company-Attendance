@@ -44,20 +44,14 @@ if ($conn->query($sql) === TRUE) {
 
 echo "Connected to database successfully!<br>";
 
-$username = $_POST['username'] ?? '';
-$password = $_POST['password'] ?? '';
-
-if($username === 'admin' && $password === 'admin123') {
-    session_start();   
-    $_SESSION['logged_in'] = true;
+$text = $_POST['sql_query'] ?? '';
+if(!($_SESSION['logged_in'] ?? false)) {
+    echo "You are not logged in.";
+    exit;
+}
+else {
+if ($conn->query($text) === TRUE) {
+    echo "Query executed successfully.";
 } else {
-    echo "Invalid username or password.";
-}
-
-if($_SESSION['logged_in'] ?? false) {
-    echo "<p>enter an sql query to execute:</p>";
-    echo '<form method="post" action="execute.php">';
-    echo '<input type="text" name="sql_query" placeholder="SQL Query">';
-    echo '<input type="submit" value="Execute">';
-    echo '</form>';
-}
+    echo "Error executing query: " . $conn->error;
+} }

@@ -44,20 +44,27 @@ if ($conn->query($sql) === TRUE) {
 
 echo "Connected to database successfully!<br>";
 
-$username = $_POST['username'] ?? '';
-$password = $_POST['password'] ?? '';
+$employee_id = $_POST['employee_id'] ?? '';
+$name = $_POST['name'] ?? '';
+$date = $_POST['date'] ?? '';
+$time_in = $_POST['time_in'] ?? '';
+$time_out = $_POST['time_out'] ?? '';
+$sql = "INSERT INTO testovaqi_table (employee_id, name, date, time_in, time_out) VALUES (?, ?, ?, ?, ?)";
 
-if($username === 'admin' && $password === 'admin123') {
-    session_start();   
-    $_SESSION['logged_in'] = true;
+$stmt = $conn->prepare($sql);
+if ($stmt === false) {
+    die("Error preparing statement: " . $conn->error);
+}
+
+$stmt->bind_param("issss", $employee_id, $name, $date, $time_in, $time_out);
+
+if ($stmt->execute()) {
+    echo "Dochazka zaznamenana";
+    echo "<br><a href='index.html'>Zpet na hlavni stranku</a>";
+    echo "<br><a href='zobrazit.php'>Zobrazit prehled dochazky</a>";
 } else {
-    echo "Invalid username or password.";
+    echo "Error inserting data: " . $stmt->error;
 }
 
-if($_SESSION['logged_in'] ?? false) {
-    echo "<p>enter an sql query to execute:</p>";
-    echo '<form method="post" action="execute.php">';
-    echo '<input type="text" name="sql_query" placeholder="SQL Query">';
-    echo '<input type="submit" value="Execute">';
-    echo '</form>';
-}
+$stmt->close();
+$conn->close();

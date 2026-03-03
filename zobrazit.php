@@ -44,20 +44,14 @@ if ($conn->query($sql) === TRUE) {
 
 echo "Connected to database successfully!<br>";
 
-$username = $_POST['username'] ?? '';
-$password = $_POST['password'] ?? '';
+$sql = "SELECT * FROM testovaqi_table";
+$result = $conn->query($sql);
 
-if($username === 'admin' && $password === 'admin123') {
-    session_start();   
-    $_SESSION['logged_in'] = true;
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        echo " - Employee ID: " . $row["employee_id"] . " - Name: " . $row["name"] . " - Date: " . $row["date"] . " - Time In: " . $row["time_in"] . " - Time Out: " . $row["time_out"] . "<br>";
+    }
 } else {
-    echo "Invalid username or password.";
+    echo "0 results";
 }
-
-if($_SESSION['logged_in'] ?? false) {
-    echo "<p>enter an sql query to execute:</p>";
-    echo '<form method="post" action="execute.php">';
-    echo '<input type="text" name="sql_query" placeholder="SQL Query">';
-    echo '<input type="submit" value="Execute">';
-    echo '</form>';
-}
+$conn->close();
