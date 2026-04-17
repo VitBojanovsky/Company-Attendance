@@ -1,0 +1,233 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    line-height: 1.6;
+}
+
+a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+label {
+    display: block;
+    margin-top: 8px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="date"],
+input[type="time"] {
+    width: 100%;
+    padding: 8px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+input[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+input[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+input[type="submit"]:active {
+    background-color: #3d8b40;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+tr:hover {
+    background-color: #f5f5f5;
+}
+
+.error {
+    color: #d32f2f;
+    background-color: #ffebee;
+    padding: 12px;
+    margin: 12px 0;
+    border-radius: 4px;
+    border-left: 4px solid #d32f2f;
+}
+
+.success {
+    color: #388e3c;
+    background-color: #e8f5e9;
+    padding: 12px;
+    margin: 12px 0;
+    border-radius: 4px;
+    border-left: 4px solid #388e3c;
+}
+
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination a, .pagination span {
+    padding: 8px 12px;
+    margin: 0 4px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    color: #0066cc;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.pagination a:hover {
+    background-color: #f2f2f2;
+}
+
+.pagination .current {
+    background-color: #0066cc;
+    color: white;
+    border-color: #0066cc;
+}
+
+.login-form {
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 5px;
+    max-width: 400px;
+    margin: 50px auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.login-form h1 {
+    margin-top: 0;
+    color: #333;
+}
+
+.actions {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.actions h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.actions a {
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    padding: 10px 16px;
+    background-color: #008CBA;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.actions a:hover {
+    background-color: #007399;
+}
+
+.actions a.logout {
+    background-color: #f44336;
+}
+
+.actions a.logout:hover {
+    background-color: #da190b;
+}
+
+h1, h2, h3 {
+    color: #333;
+}
+
+h1 {
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 10px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+nav {
+    background-color: #f2f2f2;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+nav a {
+    margin-right: 15px;
+    display: inline-block;
+}
+
+@media (max-width: 768px) {
+    body {
+        margin: 10px;
+    }
+    
+    table, th, td {
+        font-size: 12px;
+    }
+    
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="date"],
+    input[type="time"] {
+        font-size: 16px; 
+    }
+    
+    .login-form {
+        margin: 20px auto;
+        padding: 15px;
+    }
+    
+    .actions a {
+        display: block;
+        margin-right: 0;
+        margin-bottom: 8px;
+    }
+}
