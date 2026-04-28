@@ -22,7 +22,14 @@
 │   ├── execute.php                   # Whitelisted SQL execution
 │   └── logout.php                    # Secure logout
 │
-├── .env                              # Database configuration (create this)
+├── deploy/                           # Deployment configuration
+│   └── apache.conf                   # Apache web server configuration
+│
+├── .github/                          # GitHub configuration
+│   └── workflows/
+│       └── deploy.yaml               # CI/CD deployment pipeline (Raspberry Pi)
+│
+├── .env                              # Database configuration (copy of .env.example)
 ├── .gitignore                        # Git ignore rules
 └── README.md                         # This file
 ```
@@ -57,7 +64,19 @@ Create `.htaccess` in project root to rewrite to web folder, or point DocumentRo
 
 ### 3. Database
 
-The application will automatically create the database and tables on first run if they don't exist.
+The application will automatically create the database and tables on first run if they don't exist. The `config.php` script handles:
+- Database connection management
+- Automatic database creation
+- Automatic table schema creation
+- Error logging and handling
+
+**Tables Created:**
+- `testovaqi_table` - Main attendance records table
+
+### 4. Web Server Configuration
+
+**Apache:**
+See `deploy/apache.conf` for the recommended Apache configuration. Point your DocumentRoot to the `web/` directory.
 
 # Example .env
 
