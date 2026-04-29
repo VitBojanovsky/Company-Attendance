@@ -1,5 +1,5 @@
 # Dochazka pro firmu - Company Attendance System
-
+The commits are broken because I was dealing with an ownership issue (they were committed with a different email and Git didn’t like it), so I reset the HEAD.
 ## Project Structure
 
 ```
