@@ -391,6 +391,22 @@ if ($action === 'edit') {
         </div>
     </div>
 
+    <style>
+        #statusFrame {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            height: 400px;
+            border: 1px solid #333;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            overflow: auto;
+        }
+    </style>
+
     <iframe id="statusFrame" src="/server-status"></iframe>
 
     <script>
