@@ -1,10 +1,6 @@
 <?php
 require_once 'scripts/config.php';
 
-if (!($_SESSION['logged_in'] ?? false)) {
-    header('Location: admin-login-form.php');
-    exit;
-}
 ?>
 
 <!DOCTYPE html>
