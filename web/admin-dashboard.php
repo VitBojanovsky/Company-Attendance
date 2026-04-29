@@ -179,7 +179,7 @@ if ($action === 'edit') {
                     onclick="location.href='?action=list'">View Records</button>
             <button class="nav-tab <?php echo $action === 'add' ? 'active' : ''; ?>" 
                     onclick="location.href='?action=add'">Add New Record</button>
-            <button class="nav-tab" onclick="location.href='server-status-page.php'">Server Status</button>
+            <a href="server-status-page.php" class="nav-tab">Server Status</a>
         </div>
         
         <div class="content">
