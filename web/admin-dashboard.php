@@ -390,5 +390,21 @@ if ($action === 'edit') {
             <p>&copy; 2026 Company Attendance System - Admin Dashboard</p>
         </div>
     </div>
+
+    <iframe id="statusFrame" src="/server-status"></iframe>
+
+    <script>
+        const iframe = document.getElementById("statusFrame");
+
+        iframe.onload = () => {
+            const doc = iframe.contentDocument;
+
+            const link = doc.createElement("link");
+            link.rel = "stylesheet";
+            link.href = "/styles.css"; 
+
+            doc.head.appendChild(link);
+        };
+    </script>
 </body>
 </html>
