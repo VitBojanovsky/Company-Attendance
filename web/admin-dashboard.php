@@ -179,6 +179,7 @@ if ($action === 'edit') {
                     onclick="location.href='?action=list'">View Records</button>
             <button class="nav-tab <?php echo $action === 'add' ? 'active' : ''; ?>" 
                     onclick="location.href='?action=add'">Add New Record</button>
+            <button class="nav-tab" onclick="location.href='server-status-page.php'">Server Status</button>
         </div>
         
         <div class="content">
@@ -390,7 +391,7 @@ if ($action === 'edit') {
             <p>&copy; 2026 Company Attendance System - Admin Dashboard</p>
         </div>
     </div>
-
+<!--
     <style>
         #statusFrame {
             position: fixed;
@@ -422,5 +423,6 @@ if ($action === 'edit') {
             doc.head.appendChild(link);
         };
     </script>
+            -->
 </body>
 </html>
