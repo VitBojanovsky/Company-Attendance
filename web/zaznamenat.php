@@ -5,6 +5,10 @@ require_once 'scripts/csrf.php';
 $error = '';
 $success = '';
 
+$current_date = date('Y-m-d');
+$current_time = date('H:i');
+$current_time_plus_6h = date('H:i', strtotime('+6 hours'));
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
         $error = 'Invalid request. Please try again.';
@@ -96,15 +100,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <label for="date">Datum:</label>
         <input type="date" id="date" name="date" required 
-               value="<?php echo htmlspecialchars($_POST['date'] ?? ''); ?>"><br><br>
+               value="<?php echo htmlspecialchars($_POST['date'] ?? $current_date); ?>"><br><br>
         
         <label for="time_in">Příchod:</label>
         <input type="time" id="time_in" name="time_in" required 
-               value="<?php echo htmlspecialchars($_POST['time_in'] ?? ''); ?>"><br><br>
+               value="<?php echo htmlspecialchars($_POST['time_in'] ?? $current_time); ?>"><br><br>
         
         <label for="time_out">Odchod:</label>
         <input type="time" id="time_out" name="time_out" 
-               value="<?php echo htmlspecialchars($_POST['time_out'] ?? ''); ?>"><br><br>
+               value="<?php echo htmlspecialchars($_POST['time_out'] ?? $current_time_plus_6h); ?>"><br><br>
         
         <input type="submit" value="Zaznamenat">
     </form>

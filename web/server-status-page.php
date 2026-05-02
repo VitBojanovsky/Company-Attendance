@@ -23,7 +23,6 @@ require_once 'scripts/config.php';
             display: flex;
             flex-direction: column;
         }
-
         .status-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
