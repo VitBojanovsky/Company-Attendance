@@ -270,49 +270,7 @@ $editRecord = $editRecord ?? null;
     }
 }
 
-// Load records for list view
-if ($action === 'list' || $action === '') {
-    $countResult = $conn->query("SELECT COUNT(*) as total FROM testovaqi_table");
-    $countRow = $countResult->fetch_assoc();
-    $totalRecords = $countRow['total'];
-    $totalPages = max(1, ceil($totalRecords / $limit));
-    
-    if ($page > $totalPages) {
-        $page = $totalPages;
-        $offset = ($page - 1) * $limit;
-    }
-    
-    $sql = "SELECT employee_id, name, date, time_in, time_out 
-            FROM testovaqi_table 
-            ORDER BY date DESC, time_in DESC 
-            LIMIT ? OFFSET ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ii", $limit, $offset);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $records = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-}
-
-// Load single record for edit
-$editRecord = null;
-if ($action === 'edit') {
-    $employee_id = $_GET['employee_id'] ?? '';
-    $date = $_GET['date'] ?? '';
-    $time_in = $_GET['time_in'] ?? '';
-    
-    if ($employee_id && $date) {
-        $sql = "SELECT employee_id, name, date, time_in, time_out FROM testovaqi_table 
-                WHERE employee_id = ? AND date = ? AND time_in = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sss", $employee_id, $date, $time_in);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $editRecord = $result->fetch_assoc();
-        $stmt->close();
-    }
-}
-
+$editRecord = $editRecord ?? null;
 ?>
 
 <!DOCTYPE html>
