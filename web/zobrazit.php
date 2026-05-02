@@ -2,6 +2,7 @@
 require_once 'scripts/config.php';
 require_once 'scripts/csrf.php';
 
+
 try {
     $conn = getDatabase();
     
@@ -63,13 +64,7 @@ try {
                 </thead>
                 <tbody>
                     <?php while($row = $result->fetch_assoc()): 
-                        $duration = 'N/A';
-                        if ($row['time_out']) {
-                            $timeIn = new DateTime($row['time_in']);
-                            $timeOut = new DateTime($row['time_out']);
-                            $interval = $timeIn->diff($timeOut);
-                            $duration = $interval->format('%H:%I');
-                        }
+                        $duration = calculateHoursWorked($conn, $row['employee_id']);
                     ?>
                     <tr>
                         <td><?php echo htmlspecialchars($row['employee_id']); ?></td>
