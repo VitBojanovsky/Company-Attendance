@@ -2,6 +2,27 @@
 require_once 'scripts/config.php';
 require_once 'scripts/csrf.php';
 
+function calculateHoursWorked($conn, $employee_id) {
+    $sql = "SELECT COALESCE(SUM(" .
+           "CASE " .
+           "WHEN time_out >= time_in THEN TIME_TO_SEC(time_out) - TIME_TO_SEC(time_in) " .
+           "ELSE TIME_TO_SEC(time_out) + 86400 - TIME_TO_SEC(time_in) " .
+           "END" .
+           ")/3600, 0) AS hours " .
+           "FROM attendance_logs WHERE employee_id = ? AND time_out IS NOT NULL";
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        return 0;
+    }
+    $stmt->bind_param('s', $employee_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+    $hours = (float)($row['hours'] ?? 0);
+    return round($hours, 2);
+}
+
 if (!($_SESSION['logged_in'] ?? false)) {
     header('Location: admin-login-form.php');
     exit;
@@ -18,7 +39,6 @@ $page = max(1, intval($_GET['page'] ?? 1));
 $limit = 20;
 $offset = ($page - 1) * $limit;
 
-// Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
         $error = 'Invalid request. Please try again.';
@@ -28,16 +48,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($post_action === 'add_employee') {
             $employee_id = trim($_POST['employee_id'] ?? '');
             $name = trim($_POST['name'] ?? '');
-            $hours_worked = floatval($_POST['hours_worked'] ?? 0);
 
             if (!$employee_id || !$name) {
                 $error = 'Employee ID and name are required.';
             } else {
-                $sql = "INSERT INTO employees (employee_id, name, hours_worked) VALUES (?, ?, ?)
-                        ON DUPLICATE KEY UPDATE name = VALUES(name), hours_worked = VALUES(hours_worked)";
+                $sql = "INSERT INTO employees (employee_id, name) VALUES (?, ?) " .
+                        "ON DUPLICATE KEY UPDATE name = VALUES(name)";
                 $stmt = $conn->prepare($sql);
                 if ($stmt) {
-                    $stmt->bind_param("ssd", $employee_id, $name, $hours_worked);
+                    $stmt->bind_param("ss", $employee_id, $name);
                     if ($stmt->execute()) {
                         $success = 'Employee added/updated successfully!';
                     } else {
@@ -50,15 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $old_employee_id = $_POST['old_employee_id'] ?? '';
             $employee_id = trim($_POST['employee_id'] ?? '');
             $name = trim($_POST['name'] ?? '');
-            $hours_worked = floatval($_POST['hours_worked'] ?? 0);
 
             if (!$employee_id || !$name) {
                 $error = 'Employee ID and name are required.';
             } else {
-                $sql = "UPDATE employees SET employee_id = ?, name = ?, hours_worked = ? WHERE employee_id = ?";
+                $sql = "UPDATE employees SET employee_id = ?, name = ? WHERE employee_id = ?";
                 $stmt = $conn->prepare($sql);
                 if ($stmt) {
-                    $stmt->bind_param("ssds", $employee_id, $name, $hours_worked, $old_employee_id);
+                    $stmt->bind_param("sss", $employee_id, $name, $old_employee_id);
                     if ($stmt->execute()) {
                         $success = 'Employee updated successfully!';
                     } else {
@@ -192,7 +210,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Load data based on current tab
 if ($tab === 'employees') {
     if ($action === 'edit_employee') {
         $employee_id = $_GET['employee_id'] ?? '';
@@ -211,7 +228,7 @@ if ($tab === 'employees') {
         $totalRecords = $countRow['total'];
         $totalPages = max(1, ceil($totalRecords / $limit));
 
-        $sql = "SELECT * FROM employees ORDER BY employee_id LIMIT ? OFFSET ?";
+        $sql = "SELECT employee_id, name FROM employees ORDER BY employee_id LIMIT ? OFFSET ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ii", $limit, $offset);
         $stmt->execute();
@@ -258,16 +275,6 @@ if ($tab === 'employees') {
     $result = $stmt->get_result();
     $records = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
-}
-
-$editRecord = $editRecord ?? null;
-?>
-                } else {
-                    $error = 'Database error: ' . $conn->error;
-                }
-            }
-        }
-    }
 }
 
 $editRecord = $editRecord ?? null;
@@ -331,7 +338,6 @@ $editRecord = $editRecord ?? null;
                 <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
             <?php endif; ?>
 
-            <!-- EMPLOYEES TAB -->
             <div class="tab-content <?php echo $tab === 'employees' ? 'active' : ''; ?>">
                 <?php if ($action === 'add_employee' || $action === 'edit_employee'): ?>
                     <h2><?php echo $action === 'add_employee' ? 'Add Employee' : 'Edit Employee'; ?></h2>
@@ -352,11 +358,6 @@ $editRecord = $editRecord ?? null;
                                 <label for="name">Name:</label>
                                 <input type="text" id="name" name="name" required
                                        value="<?php echo htmlspecialchars($editRecord['name'] ?? ''); ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="hours_worked">Hours Worked:</label>
-                                <input type="number" id="hours_worked" name="hours_worked" step="0.01" min="0"
-                                       value="<?php echo htmlspecialchars($editRecord['hours_worked'] ?? '0'); ?>">
                             </div>
                         </div>
 
@@ -390,7 +391,7 @@ $editRecord = $editRecord ?? null;
                                         <tr>
                                             <td><?php echo htmlspecialchars($record['employee_id']); ?></td>
                                             <td><?php echo htmlspecialchars($record['name']); ?></td>
-                                            <td><?php echo htmlspecialchars($record['hours_worked']); ?> hours</td>
+                                            <td><?php echo htmlspecialchars(calculateHoursWorked($conn, $record['employee_id'])); ?> hours</td>
                                             <td>
                                                 <div class="action-buttons">
                                                     <a href="?tab=employees&action=edit_employee&employee_id=<?php echo urlencode($record['employee_id']); ?>" class="edit-btn">Edit</a>
@@ -412,7 +413,6 @@ $editRecord = $editRecord ?? null;
                 <?php endif; ?>
             </div>
 
-            <!-- ATTENDANCE LOGS TAB -->
             <div class="tab-content <?php echo $tab === 'logs' ? 'active' : ''; ?>">
                 <?php if ($action === 'add_log' || $action === 'edit_log'): ?>
                     <h2><?php echo $action === 'add_log' ? 'Add Attendance Log' : 'Edit Attendance Log'; ?></h2>
@@ -490,14 +490,18 @@ $editRecord = $editRecord ?? null;
                                             <td><?php echo htmlspecialchars($record['time_out'] ?? '-'); ?></td>
                                             <td>
                                                 <div class="action-buttons">
-                                                    <a href="?tab=logs&action=edit_log&id=<?php echo urlencode($record['id']); ?>" class="edit-btn">Edit</a>
-                                                    <form method="POST" style="display: inline;"
-                                                          onsubmit="return confirm('Are you sure you want to delete this log?');">
-                                                        <?php echo getCSRFField(); ?>
-                                                        <input type="hidden" name="action" value="delete_log">
-                                                        <input type="hidden" name="id" value="<?php echo htmlspecialchars($record['id']); ?>">
-                                                        <button type="submit" class="delete-btn">Delete</button>
-                                                    </form>
+                                                    <?php if (!empty($record['id'])): ?>
+                                                        <a href="?tab=logs&action=edit_log&id=<?php echo urlencode($record['id']); ?>" class="edit-btn">Edit</a>
+                                                        <form method="POST" style="display: inline;"
+                                                              onsubmit="return confirm('Are you sure you want to delete this log?');">
+                                                            <?php echo getCSRFField(); ?>
+                                                            <input type="hidden" name="action" value="delete_log">
+                                                            <input type="hidden" name="id" value="<?php echo htmlspecialchars($record['id']); ?>">
+                                                            <button type="submit" class="delete-btn">Delete</button>
+                                                        </form>
+                                                    <?php else: ?>
+                                                        <span style="color: #999;">No actions available</span>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -556,17 +560,19 @@ $editRecord = $editRecord ?? null;
                                 <tbody>
                                     <?php foreach ($records as $record): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($record['username']); ?></td>
-                                            <td><?php echo htmlspecialchars($record['created_at']); ?></td>
+                                            <td><?php echo htmlspecialchars($record['username'] ?? 'Unknown'); ?></td>
+                                            <td><?php echo htmlspecialchars($record['created_at'] ?? 'Unknown'); ?></td>
                                             <td><?php echo htmlspecialchars($record['last_login'] ?? 'Never'); ?></td>
                                             <td>
-                                                <form method="POST" style="display: inline;"
-                                                      onsubmit="return confirm('Are you sure you want to delete this admin account?');">
-                                                    <?php echo getCSRFField(); ?>
-                                                    <input type="hidden" name="action" value="delete_admin">
-                                                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($record['id']); ?>">
-                                                    <button type="submit" class="delete-btn">Delete</button>
-                                                </form>
+                                                <?php if (!empty($record['id'])): ?>
+                                                    <form method="POST" style="display: inline;"
+                                                          onsubmit="return confirm('Are you sure you want to delete this admin account?');">
+                                                        <?php echo getCSRFField(); ?>
+                                                        <input type="hidden" name="action" value="delete_admin">
+                                                        <input type="hidden" name="id" value="<?php echo htmlspecialchars($record['id']); ?>">
+                                                        <button type="submit" class="delete-btn">Delete</button>
+                                                    </form>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

@@ -8,21 +8,54 @@ $success = '';
 $current_date = date('Y-m-d');
 $current_time = date('H:i');
 $current_time_plus_6h = date('H:i', strtotime('+6 hours'));
+$employee_name = '';
+
+if (isset($_GET['lookup'])) {
+    header('Content-Type: application/json');
+    $lookup_id = trim($_GET['lookup']);
+
+    if ($lookup_id === '') {
+        echo json_encode(['error' => 'Employee ID is required.']);
+        exit;
+    }
+
+    try {
+        $conn = getDatabase();
+        $lookupStmt = $conn->prepare("SELECT name FROM employees WHERE employee_id = ?");
+        if ($lookupStmt === false) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+
+        $lookupStmt->bind_param('s', $lookup_id);
+        $lookupStmt->execute();
+        $lookupResult = $lookupStmt->get_result();
+        $employeeRow = $lookupResult->fetch_assoc();
+        $lookupStmt->close();
+
+        if ($employeeRow) {
+            echo json_encode(['name' => $employeeRow['name']]);
+        } else {
+            echo json_encode(['error' => 'Employee ID not found.']);
+        }
+    } catch (Exception $e) {
+        error_log("Employee lookup error: " . $e->getMessage());
+        echo json_encode(['error' => 'Unable to fetch employee name.']);
+    }
+
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
         $error = 'Invalid request. Please try again.';
     } else {
         $employee_id = trim($_POST['employee_id'] ?? '');
-        $name = trim($_POST['name'] ?? '');
         $date = $_POST['date'] ?? '';
         $time_in = $_POST['time_in'] ?? '';
         $time_out = $_POST['time_out'] ?? '';
         
         if (empty($employee_id)) {
             $error = 'Employee ID is required.';
-        } elseif (empty($name)) {
-            $error = 'Name is required.';
         } elseif (empty($date)) {
             $error = 'Date is required.';
         } elseif (empty($time_in)) {
@@ -36,32 +69,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 $conn = getDatabase();
-                $sql = "INSERT INTO attendance_logs (employee_id, name, date, time_in, time_out) 
-                        VALUES (?, ?, ?, ?, ?)";
-                
-                $stmt = $conn->prepare($sql);
-                if ($stmt === false) {
+                $lookupStmt = $conn->prepare("SELECT name FROM employees WHERE employee_id = ?");
+                if ($lookupStmt === false) {
                     throw new Exception("Prepare failed: " . $conn->error);
                 }
-                
-                $time_out = !empty($time_out) ? $time_out : null;
-                
-                $stmt->bind_param("sssss", $employee_id, $name, $date, $time_in, $time_out);
-                
-                if (!$stmt->execute()) {
-                    if (strpos($stmt->error, 'Duplicate entry') !== false) {
-                        $error = 'This attendance record already exists for this date and time.';
-                    } else {
-                        throw new Exception("Execute failed: " . $stmt->error);
-                    }
+
+                $lookupStmt->bind_param('s', $employee_id);
+                $lookupStmt->execute();
+                $lookupResult = $lookupStmt->get_result();
+                $employeeRow = $lookupResult->fetch_assoc();
+                $lookupStmt->close();
+
+                if (!$employeeRow) {
+                    $error = 'Employee ID not found. Please register the employee first.';
                 } else {
-                    $success = 'Attendance recorded successfully!';
+                    $name = $employeeRow['name'];
+                    $employee_name = $name;
                 }
-                
-                $stmt->close();
+
+                if (empty($error)) {
+                    $sql = "INSERT INTO attendance_logs (employee_id, name, date, time_in, time_out) 
+                            VALUES (?, ?, ?, ?, ?)";
+
+                    $stmt = $conn->prepare($sql);
+                    if ($stmt === false) {
+                        throw new Exception("Prepare failed: " . $conn->error);
+                    }
+
+                    $time_out = !empty($time_out) ? $time_out : null;
+                    $stmt->bind_param("sssss", $employee_id, $name, $date, $time_in, $time_out);
+
+                    if (!$stmt->execute()) {
+                        if (strpos($stmt->error, 'Duplicate entry') !== false) {
+                            $error = 'This attendance record already exists for this date and time.';
+                        } else {
+                            throw new Exception("Execute failed: " . $stmt->error);
+                        }
+                    } else {
+                        $success = 'Attendance recorded successfully!';
+                    }
+                    
+                    $stmt->close();
+                }
             } catch (Exception $e) {
                 error_log("Attendance insert error: " . $e->getMessage());
-                $error = 'Failed to record attendance. Please try again.';
+                if (empty($error)) {
+                    $error = 'Failed to record attendance. Please try again.';
+                }
             }
         }
     }
@@ -94,9 +148,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="text" id="employee_id" name="employee_id" required 
                value="<?php echo htmlspecialchars($_POST['employee_id'] ?? ''); ?>"><br><br>
         
-        <label for="name">Jméno:</label>
-        <input type="text" id="name" name="name" required 
-               value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>"><br><br>
+        <label for="name_display">Jméno:</label>
+        <input type="text" id="name_display" readonly 
+               value="<?php echo htmlspecialchars($employee_name ?? ''); ?>"><br><br>
+        <input type="hidden" id="name" name="name" 
+               value="<?php echo htmlspecialchars($employee_name ?? ''); ?>">
+        <p id="lookupMessage" class="error" style="display:none;"></p>
 
         <label for="date">Datum:</label>
         <input type="date" id="date" name="date" required 
@@ -112,7 +169,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <input type="submit" value="Zaznamenat">
     </form>
-    
+    <script>
+        const employeeInput = document.getElementById('employee_id');
+        const nameDisplay = document.getElementById('name_display');
+        const nameHidden = document.getElementById('name');
+        const lookupMessage = document.getElementById('lookupMessage');
+
+        async function lookupEmployeeName() {
+            const employeeId = employeeInput.value.trim();
+            if (!employeeId) {
+                nameDisplay.value = '';
+                nameHidden.value = '';
+                lookupMessage.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(`zaznamenat.php?lookup=${encodeURIComponent(employeeId)}`);
+                const result = await response.json();
+                if (result.name) {
+                    nameDisplay.value = result.name;
+                    nameHidden.value = result.name;
+                    lookupMessage.style.display = 'none';
+                } else {
+                    nameDisplay.value = '';
+                    nameHidden.value = '';
+                    lookupMessage.textContent = result.error || 'Employee not found.';
+                    lookupMessage.style.display = 'block';
+                }
+            } catch (err) {
+                nameDisplay.value = '';
+                nameHidden.value = '';
+                lookupMessage.textContent = 'Unable to resolve employee name.';
+                lookupMessage.style.display = 'block';
+            }
+        }
+
+        employeeInput.addEventListener('blur', lookupEmployeeName);
+        employeeInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter' || event.key === 'Tab') {
+                lookupEmployeeName();
+            }
+        });
+    </script>
     <br>
     <a href="index.html">Zpet na hlavni stranku</a>
 </body>
