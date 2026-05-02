@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 $conn = getDatabase();
-                $sql = "INSERT INTO testovaqi_table (employee_id, name, date, time_in, time_out) 
+                $sql = "INSERT INTO attendance_logs (employee_id, name, date, time_in, time_out) 
                         VALUES (?, ?, ?, ?, ?)";
                 
                 $stmt = $conn->prepare($sql);

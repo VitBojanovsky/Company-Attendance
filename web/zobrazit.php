@@ -9,13 +9,13 @@ try {
     $limit = 20;
     $offset = ($page - 1) * $limit;
     
-    $countResult = $conn->query("SELECT COUNT(*) as total FROM testovaqi_table");
+    $countResult = $conn->query("SELECT COUNT(*) as total FROM attendance_logs");
     $countRow = $countResult->fetch_assoc();
     $total = $countRow['total'];
     $totalPages = ceil($total / $limit);
     
     $sql = "SELECT employee_id, name, date, time_in, time_out 
-            FROM testovaqi_table 
+            FROM attendance_logs 
             ORDER BY date DESC, time_in DESC 
             LIMIT ? OFFSET ?";
     

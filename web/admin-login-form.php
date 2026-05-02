@@ -14,17 +14,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($username) || empty($password)) {
             $error = 'Username and password are required.';
         } else {
-            if ($username === 'admin' && $password === 'admin123') {
-                session_regenerate_id(true);
-                $_SESSION['logged_in'] = true;
-                $_SESSION['username'] = $username;
-                $_SESSION['login_time'] = time();
-                
-                header('Location: admin-dashboard.php');
-                exit;
+            $conn = getDatabase();
+            $stmt = $conn->prepare("SELECT id, password_hash FROM admin_accounts WHERE username = ?");
+            $stmt->bind_param("s", $username);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows === 1) {
+                $admin = $result->fetch_assoc();
+                if (password_verify($password, $admin['password_hash'])) {
+                    // Update last login
+                    $update_stmt = $conn->prepare("UPDATE admin_accounts SET last_login = NOW() WHERE id = ?");
+                    $update_stmt->bind_param("i", $admin['id']);
+                    $update_stmt->execute();
+                    $update_stmt->close();
+                    
+                    session_regenerate_id(true);
+                    $_SESSION['logged_in'] = true;
+                    $_SESSION['username'] = $username;
+                    $_SESSION['login_time'] = time();
+                    
+                    header('Location: admin-dashboard.php');
+                    exit;
+                } else {
+                    $error = 'Invalid username or password.';
+                }
             } else {
                 $error = 'Invalid username or password.';
             }
+            $stmt->close();
         }
     }
 }
