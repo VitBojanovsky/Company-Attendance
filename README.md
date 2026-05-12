@@ -158,3 +158,4 @@ CREATE TABLE admin_accounts (
     last_login TIMESTAMP NULL
 );
 ```
+![database er diagram](db-layout.png)

@@ -1,5 +1,5 @@
 <?php
-require_once 'scripts/config.php';
+
 require_once 'scripts/csrf.php';
 
 if ($_SESSION['logged_in'] ?? false) {

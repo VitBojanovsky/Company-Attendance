@@ -3,7 +3,7 @@ require_once __DIR__ . '/../scripts/config.php';
 
 $conn = getDatabase();
 
-// Create employees table
+
 $sql_employees = "CREATE TABLE IF NOT EXISTS employees (
     employee_id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -18,7 +18,7 @@ if ($conn->query($sql_employees) === TRUE) {
     echo "Error creating employees table: " . $conn->error . "\n";
 }
 
-// Create attendance_logs table (renamed from testovaqi_table)
+
 $sql_logs = "CREATE TABLE IF NOT EXISTS attendance_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     employee_id VARCHAR(50) NOT NULL,
@@ -37,7 +37,7 @@ if ($conn->query($sql_logs) === TRUE) {
     echo "Error creating attendance logs table: " . $conn->error . "\n";
 }
 
-// Create admin_accounts table
+
 $sql_admins = "CREATE TABLE IF NOT EXISTS admin_accounts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
@@ -52,7 +52,7 @@ if ($conn->query($sql_admins) === TRUE) {
     echo "Error creating admin accounts table: " . $conn->error . "\n";
 }
 
-// Migrate existing data from testovaqi_table to attendance_logs if it exists
+
 $result = $conn->query("SHOW TABLES LIKE 'testovaqi_table'");
 if ($result->num_rows > 0) {
     echo "Migrating data from testovaqi_table to attendance_logs...\n";
@@ -63,15 +63,15 @@ if ($result->num_rows > 0) {
     if ($conn->query($migrate_sql) === TRUE) {
         echo "Data migration completed successfully\n";
 
-        // Optional: Drop the old table after migration
-        // $conn->query("DROP TABLE testovaqi_table");
-        // echo "Old table dropped\n";
+       
+        $conn->query("DROP TABLE testovaqi_table");
+        echo "Old table dropped\n";
     } else {
         echo "Error migrating data: " . $conn->error . "\n";
     }
 }
 
-// Insert default admin account if none exists
+
 $check_admin = $conn->query("SELECT COUNT(*) as count FROM admin_accounts");
 $row = $check_admin->fetch_assoc();
 if ($row['count'] == 0) {

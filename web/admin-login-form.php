@@ -1,5 +1,5 @@
 <?php
-require_once 'scripts/config.php';
+
 require_once 'scripts/csrf.php';
 
 $error = '';
@@ -23,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($result->num_rows === 1) {
                 $admin = $result->fetch_assoc();
                 if (password_verify($password, $admin['password_hash'])) {
-                    // Update last login
                     $update_stmt = $conn->prepare("UPDATE admin_accounts SET last_login = NOW() WHERE id = ?");
                     $update_stmt->bind_param("i", $admin['id']);
                     $update_stmt->execute();
