@@ -1,37 +1,40 @@
 <?php
-require_once 'scripts/config.php';
-require_once 'scripts/csrf.php';
+require_once "scripts/config.php";
+require_once "scripts/csrf.php";
 
+$result = null;
+$totalPages = 0;
 
 try {
     $conn = getDatabase();
-    
-    $page = max(1, intval($_GET['page'] ?? 1));
+
+    $page = max(1, intval($_GET["page"] ?? 1));
     $limit = 20;
     $offset = ($page - 1) * $limit;
-    
-    $countResult = $conn->query("SELECT COUNT(*) as total FROM attendance_logs");
+
+    $countResult = $conn->query(
+        "SELECT COUNT(*) as total FROM attendance_logs",
+    );
     $countRow = $countResult->fetch_assoc();
-    $total = $countRow['total'];
+    $total = $countRow["total"];
     $totalPages = ceil($total / $limit);
-    
-    $sql = "SELECT employee_id, name, date, time_in, time_out 
-            FROM attendance_logs 
-            ORDER BY date DESC, time_in DESC 
+
+    $sql = "SELECT employee_id, name, date, time_in, time_out
+            FROM attendance_logs
+            ORDER BY date DESC, time_in DESC
             LIMIT ? OFFSET ?";
-    
+
     $stmt = $conn->prepare($sql);
     if ($stmt === false) {
         throw new Exception("Query failed: " . $conn->error);
     }
-    
+
     $stmt->bind_param("ii", $limit, $offset);
     $stmt->execute();
     $result = $stmt->get_result();
-    
 } catch (Exception $e) {
     error_log("Attendance view error: " . $e->getMessage());
-    $error = 'Failed to load attendance records.';
+    $error = "Failed to load attendance records.";
 }
 ?>
 
@@ -45,7 +48,7 @@ try {
 </head>
 <body>
     <h1>Prehled dochazky</h1>
-    
+
     <?php if (isset($error)): ?>
         <p style="color: red;"><?php echo htmlspecialchars($error); ?></p>
     <?php else: ?>
@@ -63,18 +66,27 @@ try {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while($row = $result->fetch_assoc()): 
-                        $duration = calculateHoursWorked($conn, $row['employee_id']);
-                    ?>
+                    <?php while ($row = $result->fetch_assoc()):
+                        $duration = calculateHoursWorked(
+                            $row["time_in"],
+                            $row["time_out"],
+                        ); ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($row['employee_id']); ?></td>
-                        <td><?php echo htmlspecialchars($row['name']); ?></td>
-                        <td><?php echo htmlspecialchars($row['date']); ?></td>
-                        <td><?php echo htmlspecialchars($row['time_in']); ?></td>
-                        <td><?php echo $row['time_out'] ? htmlspecialchars($row['time_out']) : 'N/A'; ?></td>
+                        <td><?php echo htmlspecialchars(
+                            $row["employee_id"],
+                        ); ?></td>
+                        <td><?php echo htmlspecialchars($row["name"]); ?></td>
+                        <td><?php echo htmlspecialchars($row["date"]); ?></td>
+                        <td><?php echo htmlspecialchars(
+                            $row["time_in"],
+                        ); ?></td>
+                        <td><?php echo $row["time_out"]
+                            ? htmlspecialchars($row["time_out"])
+                            : "N/A"; ?></td>
                         <td><?php echo $duration; ?></td>
                     </tr>
-                    <?php endwhile; ?>
+                    <?php
+                    endwhile; ?>
                 </tbody>
             </table>
 
@@ -83,15 +95,19 @@ try {
                     <a href="?page=1">First</a>
                     <a href="?page=<?php echo $page - 1; ?>">Previous</a>
                 <?php endif; ?>
-                
-                <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
+
+                <?php for (
+                    $i = max(1, $page - 2);
+                    $i <= min($totalPages, $page + 2);
+                    $i++
+                ): ?>
                     <?php if ($i === $page): ?>
                         <span class="current"><?php echo $i; ?></span>
                     <?php else: ?>
                         <a href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
                     <?php endif; ?>
                 <?php endfor; ?>
-                
+
                 <?php if ($page < $totalPages): ?>
                     <a href="?page=<?php echo $page + 1; ?>">Next</a>
                     <a href="?page=<?php echo $totalPages; ?>">Last</a>
@@ -101,7 +117,7 @@ try {
             <p>No attendance records found.</p>
         <?php endif; ?>
     <?php endif; ?>
-    
+
     <br><br>
     <a href="index.html">Back to home</a>
 </body>
