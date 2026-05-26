@@ -49,6 +49,9 @@ DB_NAME=company_attendance
 ```
 
 ### 2. Web Server Configuration
+- For this step you will need to have PHP installed
+- Apache2 recommended
+- Also MySQL needs to be installed as well
 
 Point your web server's document root to the `web/` directory.
 
