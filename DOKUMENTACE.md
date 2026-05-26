@@ -5,6 +5,6 @@ So what I decided to do was just a website that has a form in which an employee 
 ## Security
 The security relies on the fact that other people will not know other peoples id, this is not ideal, however INT has a lot of numbers, so maybe with some rate limiting this could work. 
 There is no signup, the employees are managed by the admin. The admins login is hard coded (added during db initialization), which is in the webroot inside /scripts/, which is a big security risk, because anyone who knows the path can access it and see the credentials. Even if you rewrite admin password, the DB inicialiyation script will overwrite it, so maybe a part of the deployment should be to, after suecesfull migration, to delete /scripts/migrate_db.php. 
-When employee enters time out < time in, the system will 
+When employee enters time out < time in, the system will calculate the time correctly.
 Overall the security of this project was not a priority at all, I did the bare minimum to get it working. Not that I do not care, but this just an assignment, not a real system, that real people will rely on. You could argue, that this is a showcase of my skills and that it should be made to my highest abilities, however, I have other projects that I will use as a reference for my future work, not this one, I will never work on websites in the future (hopefully).
 Maybe I will implement some security measures in the future, but for now this is the bare minimum.
