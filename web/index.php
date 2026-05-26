@@ -1,6 +1,5 @@
 <?php
-require_once 'scripts/config.php';
-?>
+require_once "scripts/config.php"; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

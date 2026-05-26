@@ -8,3 +8,4 @@ There is no signup, the employees are managed by the admin. The admins login is 
 When employee enters time out < time in, the system will calculate the time correctly.
 Overall the security of this project was not a priority at all, I did the bare minimum to get it working. Not that I do not care, but this just an assignment, not a real system, that real people will rely on. You could argue, that this is a showcase of my skills and that it should be made to my highest abilities, however, I have other projects that I will use as a reference for my future work, not this one, I will never work on websites in the future (hopefully).
 Maybe I will implement some security measures in the future, but for now this is the bare minimum.
+##
