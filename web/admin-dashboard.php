@@ -1,188 +1,214 @@
 <?php
 
-require_once 'scripts/csrf.php';
+require_once "scripts/csrf.php";
+require "scripts/config.php";
 
-
-
-if (!($_SESSION['logged_in'] ?? false)) {
-    header('Location: admin-login-form.php');
-    exit;
+if (!($_SESSION["logged_in"] ?? false)) {
+    header("Location: admin-login-form.php");
+    exit();
 }
 
 $conn = getDatabase();
-$error = '';
-$success = '';
-$action = $_GET['action'] ?? 'employees';
-$tab = $_GET['tab'] ?? 'employees';
+$error = "";
+$success = "";
+$action = $_GET["action"] ?? "employees";
+$tab = $_GET["tab"] ?? "employees";
 $records = [];
 $totalRecords = 0;
-$page = max(1, intval($_GET['page'] ?? 1));
+$page = max(1, intval($_GET["page"] ?? 1));
 $limit = 20;
 $offset = ($page - 1) * $limit;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
-        $error = 'Invalid request. Please try again.';
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!verifyCSRFToken($_POST["csrf_token"] ?? "")) {
+        $error = "Invalid request. Please try again.";
     } else {
-        $post_action = $_POST['action'] ?? '';
+        $post_action = $_POST["action"] ?? "";
 
-        if ($post_action === 'add_employee') {
-            $employee_id = trim($_POST['employee_id'] ?? '');
-            $name = trim($_POST['name'] ?? '');
+        if ($post_action === "add_employee") {
+            $employee_id = trim($_POST["employee_id"] ?? "");
+            $name = trim($_POST["name"] ?? "");
 
             if (!$employee_id || !$name) {
-                $error = 'Employee ID and name are required.';
+                $error = "Employee ID and name are required.";
             } else {
-                $sql = "INSERT INTO employees (employee_id, name) VALUES (?, ?) " .
-                        "ON DUPLICATE KEY UPDATE name = VALUES(name)";
+                $sql =
+                    "INSERT INTO employees (employee_id, name) VALUES (?, ?) " .
+                    "ON DUPLICATE KEY UPDATE name = VALUES(name)";
                 $stmt = $conn->prepare($sql);
                 if ($stmt) {
                     $stmt->bind_param("ss", $employee_id, $name);
                     if ($stmt->execute()) {
-                        $success = 'Employee added/updated successfully!';
+                        $success = "Employee added/updated successfully!";
                     } else {
-                        $error = 'Failed to add employee: ' . $conn->error;
+                        $error = "Failed to add employee: " . $conn->error;
                     }
                     $stmt->close();
                 }
             }
-        } elseif ($post_action === 'update_employee') {
-            $old_employee_id = $_POST['old_employee_id'] ?? '';
-            $employee_id = trim($_POST['employee_id'] ?? '');
-            $name = trim($_POST['name'] ?? '');
+        } elseif ($post_action === "update_employee") {
+            $old_employee_id = $_POST["old_employee_id"] ?? "";
+            $employee_id = trim($_POST["employee_id"] ?? "");
+            $name = trim($_POST["name"] ?? "");
 
             if (!$employee_id || !$name) {
-                $error = 'Employee ID and name are required.';
+                $error = "Employee ID and name are required.";
             } else {
-                $sql = "UPDATE employees SET employee_id = ?, name = ? WHERE employee_id = ?";
+                $sql =
+                    "UPDATE employees SET employee_id = ?, name = ? WHERE employee_id = ?";
                 $stmt = $conn->prepare($sql);
                 if ($stmt) {
-                    $stmt->bind_param("sss", $employee_id, $name, $old_employee_id);
+                    $stmt->bind_param(
+                        "sss",
+                        $employee_id,
+                        $name,
+                        $old_employee_id,
+                    );
                     if ($stmt->execute()) {
-                        $success = 'Employee updated successfully!';
+                        $success = "Employee updated successfully!";
                     } else {
-                        $error = 'Failed to update employee: ' . $conn->error;
+                        $error = "Failed to update employee: " . $conn->error;
                     }
                     $stmt->close();
                 }
             }
-        } elseif ($post_action === 'delete_employee') {
-            $employee_id = $_POST['employee_id'] ?? '';
+        } elseif ($post_action === "delete_employee") {
+            $employee_id = $_POST["employee_id"] ?? "";
 
             if (!$employee_id) {
-                $error = 'Invalid employee ID.';
+                $error = "Invalid employee ID.";
             } else {
                 $sql = "DELETE FROM employees WHERE employee_id = ?";
                 $stmt = $conn->prepare($sql);
                 if ($stmt) {
                     $stmt->bind_param("s", $employee_id);
                     if ($stmt->execute()) {
-                        $success = 'Employee deleted successfully!';
+                        $success = "Employee deleted successfully!";
                     } else {
-                        $error = 'Failed to delete employee: ' . $conn->error;
+                        $error = "Failed to delete employee: " . $conn->error;
                     }
                     $stmt->close();
                 }
             }
-        } elseif ($post_action === 'add_log') {
-            $employee_id = trim($_POST['employee_id'] ?? '');
-            $name = trim($_POST['name'] ?? '');
-            $date = trim($_POST['date'] ?? '');
-            $time_in = trim($_POST['time_in'] ?? '');
-            $time_out = trim($_POST['time_out'] ?? '');
+        } elseif ($post_action === "add_log") {
+            $employee_id = trim($_POST["employee_id"] ?? "");
+            $name = trim($_POST["name"] ?? "");
+            $date = trim($_POST["date"] ?? "");
+            $time_in = trim($_POST["time_in"] ?? "");
+            $time_out = trim($_POST["time_out"] ?? "");
 
             if (!$employee_id || !$name || !$date || !$time_in) {
-                $error = 'Please fill in all required fields.';
+                $error = "Please fill in all required fields.";
             } else {
-                $sql = "INSERT INTO attendance_logs (employee_id, name, date, time_in, time_out) VALUES (?, ?, ?, ?, ?)";
+                $sql =
+                    "INSERT INTO attendance_logs (employee_id, name, date, time_in, time_out) VALUES (?, ?, ?, ?, ?)";
                 $stmt = $conn->prepare($sql);
                 if ($stmt) {
-                    $stmt->bind_param("sssss", $employee_id, $name, $date, $time_in, $time_out);
+                    $stmt->bind_param(
+                        "sssss",
+                        $employee_id,
+                        $name,
+                        $date,
+                        $time_in,
+                        $time_out,
+                    );
                     if ($stmt->execute()) {
-                        $success = 'Attendance log added successfully!';
+                        $success = "Attendance log added successfully!";
                     } else {
-                        $error = 'Failed to add log: ' . $conn->error;
+                        $error = "Failed to add log: " . $conn->error;
                     }
                     $stmt->close();
                 }
             }
-        } elseif ($post_action === 'update_log') {
-            $id = intval($_POST['id'] ?? 0);
-            $employee_id = trim($_POST['employee_id'] ?? '');
-            $name = trim($_POST['name'] ?? '');
-            $date = trim($_POST['date'] ?? '');
-            $time_in = trim($_POST['time_in'] ?? '');
-            $time_out = trim($_POST['time_out'] ?? '');
+        } elseif ($post_action === "update_log") {
+            $id = intval($_POST["id"] ?? 0);
+            $employee_id = trim($_POST["employee_id"] ?? "");
+            $name = trim($_POST["name"] ?? "");
+            $date = trim($_POST["date"] ?? "");
+            $time_in = trim($_POST["time_in"] ?? "");
+            $time_out = trim($_POST["time_out"] ?? "");
 
             if (!$id || !$employee_id || !$name || !$date || !$time_in) {
-                $error = 'Please fill in all required fields.';
+                $error = "Please fill in all required fields.";
             } else {
-                $sql = "UPDATE attendance_logs SET employee_id = ?, name = ?, date = ?, time_in = ?, time_out = ? WHERE id = ?";
+                $sql =
+                    "UPDATE attendance_logs SET employee_id = ?, name = ?, date = ?, time_in = ?, time_out = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
                 if ($stmt) {
-                    $stmt->bind_param("sssssi", $employee_id, $name, $date, $time_in, $time_out, $id);
+                    $stmt->bind_param(
+                        "sssssi",
+                        $employee_id,
+                        $name,
+                        $date,
+                        $time_in,
+                        $time_out,
+                        $id,
+                    );
                     if ($stmt->execute()) {
-                        $success = 'Log updated successfully!';
+                        $success = "Log updated successfully!";
                     } else {
-                        $error = 'Failed to update log: ' . $conn->error;
+                        $error = "Failed to update log: " . $conn->error;
                     }
                     $stmt->close();
                 }
             }
-        } elseif ($post_action === 'delete_log') {
-            $id = intval($_POST['id'] ?? 0);
+        } elseif ($post_action === "delete_log") {
+            $id = intval($_POST["id"] ?? 0);
 
             if (!$id) {
-                $error = 'Invalid log ID.';
+                $error = "Invalid log ID.";
             } else {
                 $sql = "DELETE FROM attendance_logs WHERE id = ?";
                 $stmt = $conn->prepare($sql);
                 if ($stmt) {
                     $stmt->bind_param("i", $id);
                     if ($stmt->execute()) {
-                        $success = 'Log deleted successfully!';
+                        $success = "Log deleted successfully!";
                     } else {
-                        $error = 'Failed to delete log: ' . $conn->error;
+                        $error = "Failed to delete log: " . $conn->error;
                     }
                     $stmt->close();
                 }
             }
-        } elseif ($post_action === 'add_admin') {
-            $username = trim($_POST['username'] ?? '');
-            $password = $_POST['password'] ?? '';
+        } elseif ($post_action === "add_admin") {
+            $username = trim($_POST["username"] ?? "");
+            $password = $_POST["password"] ?? "";
 
             if (!$username || !$password) {
-                $error = 'Username and password are required.';
+                $error = "Username and password are required.";
             } elseif (strlen($password) < 6) {
-                $error = 'Password must be at least 6 characters long.';
+                $error = "Password must be at least 6 characters long.";
             } else {
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
-                $sql = "INSERT INTO admin_accounts (username, password_hash) VALUES (?, ?)";
+                $sql =
+                    "INSERT INTO admin_accounts (username, password_hash) VALUES (?, ?)";
                 $stmt = $conn->prepare($sql);
                 if ($stmt) {
                     $stmt->bind_param("ss", $username, $password_hash);
                     if ($stmt->execute()) {
-                        $success = 'Admin account created successfully!';
+                        $success = "Admin account created successfully!";
                     } else {
-                        $error = 'Failed to create admin account: ' . $conn->error;
+                        $error =
+                            "Failed to create admin account: " . $conn->error;
                     }
                     $stmt->close();
                 }
             }
-        } elseif ($post_action === 'delete_admin') {
-            $id = intval($_POST['id'] ?? 0);
+        } elseif ($post_action === "delete_admin") {
+            $id = intval($_POST["id"] ?? 0);
 
             if (!$id) {
-                $error = 'Invalid admin ID.';
+                $error = "Invalid admin ID.";
             } else {
                 $sql = "DELETE FROM admin_accounts WHERE id = ?";
                 $stmt = $conn->prepare($sql);
                 if ($stmt) {
                     $stmt->bind_param("i", $id);
                     if ($stmt->execute()) {
-                        $success = 'Admin account deleted successfully!';
+                        $success = "Admin account deleted successfully!";
                     } else {
-                        $error = 'Failed to delete admin account: ' . $conn->error;
+                        $error =
+                            "Failed to delete admin account: " . $conn->error;
                     }
                     $stmt->close();
                 }
@@ -191,9 +217,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-if ($tab === 'employees') {
-    if ($action === 'edit_employee') {
-        $employee_id = $_GET['employee_id'] ?? '';
+if ($tab === "employees") {
+    if ($action === "edit_employee") {
+        $employee_id = $_GET["employee_id"] ?? "";
         if ($employee_id) {
             $sql = "SELECT * FROM employees WHERE employee_id = ?";
             $stmt = $conn->prepare($sql);
@@ -206,10 +232,11 @@ if ($tab === 'employees') {
     } else {
         $countResult = $conn->query("SELECT COUNT(*) as total FROM employees");
         $countRow = $countResult->fetch_assoc();
-        $totalRecords = $countRow['total'];
+        $totalRecords = $countRow["total"];
         $totalPages = max(1, ceil($totalRecords / $limit));
 
-        $sql = "SELECT employee_id, name FROM employees ORDER BY employee_id LIMIT ? OFFSET ?";
+        $sql =
+            "SELECT employee_id, name FROM employees ORDER BY employee_id LIMIT ? OFFSET ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ii", $limit, $offset);
         $stmt->execute();
@@ -217,9 +244,9 @@ if ($tab === 'employees') {
         $records = $result->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
     }
-} elseif ($tab === 'logs') {
-    if ($action === 'edit_log') {
-        $id = intval($_GET['id'] ?? 0);
+} elseif ($tab === "logs") {
+    if ($action === "edit_log") {
+        $id = intval($_GET["id"] ?? 0);
         if ($id) {
             $sql = "SELECT * FROM attendance_logs WHERE id = ?";
             $stmt = $conn->prepare($sql);
@@ -230,12 +257,15 @@ if ($tab === 'employees') {
             $stmt->close();
         }
     } else {
-        $countResult = $conn->query("SELECT COUNT(*) as total FROM attendance_logs");
+        $countResult = $conn->query(
+            "SELECT COUNT(*) as total FROM attendance_logs",
+        );
         $countRow = $countResult->fetch_assoc();
-        $totalRecords = $countRow['total'];
+        $totalRecords = $countRow["total"];
         $totalPages = max(1, ceil($totalRecords / $limit));
 
-        $sql = "SELECT * FROM attendance_logs ORDER BY date DESC, time_in DESC LIMIT ? OFFSET ?";
+        $sql =
+            "SELECT * FROM attendance_logs ORDER BY date DESC, time_in DESC LIMIT ? OFFSET ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ii", $limit, $offset);
         $stmt->execute();
@@ -243,13 +273,14 @@ if ($tab === 'employees') {
         $records = $result->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
     }
-} elseif ($tab === 'admins') {
+} elseif ($tab === "admins") {
     $countResult = $conn->query("SELECT COUNT(*) as total FROM admin_accounts");
     $countRow = $countResult->fetch_assoc();
-    $totalRecords = $countRow['total'];
+    $totalRecords = $countRow["total"];
     $totalPages = max(1, ceil($totalRecords / $limit));
 
-    $sql = "SELECT id, username, created_at, last_login FROM admin_accounts ORDER BY username LIMIT ? OFFSET ?";
+    $sql =
+        "SELECT id, username, created_at, last_login FROM admin_accounts ORDER BY username LIMIT ? OFFSET ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $limit, $offset);
     $stmt->execute();
@@ -293,7 +324,9 @@ $editRecord = $editRecord ?? null;
                 <p>Company Attendance Management System</p>
             </div>
             <div class="header-right">
-                <p>Welcome, <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong></p>
+                <p>Welcome, <strong><?php echo htmlspecialchars(
+                    $_SESSION["username"],
+                ); ?></strong></p>
                 <a href="logout.php" style="color: white; text-decoration: none; margin-top: 10px; display: inline-block;">
                     <button class="button-secondary" style="padding: 8px 16px; font-size: 12px;">Logout</button>
                 </a>
@@ -301,48 +334,80 @@ $editRecord = $editRecord ?? null;
         </div>
 
         <div class="nav-tabs">
-            <button class="nav-tab <?php echo $tab === 'employees' ? 'active' : ''; ?>"
+            <button class="nav-tab <?php echo $tab === "employees"
+                ? "active"
+                : ""; ?>"
                     onclick="location.href='?tab=employees'">Employees</button>
-            <button class="nav-tab <?php echo $tab === 'logs' ? 'active' : ''; ?>"
+            <button class="nav-tab <?php echo $tab === "logs"
+                ? "active"
+                : ""; ?>"
                     onclick="location.href='?tab=logs'">Attendance Logs</button>
-            <button class="nav-tab <?php echo $tab === 'admins' ? 'active' : ''; ?>"
+            <button class="nav-tab <?php echo $tab === "admins"
+                ? "active"
+                : ""; ?>"
                     onclick="location.href='?tab=admins'">Admin Accounts</button>
             <a href="server-status-page.php" class="nav-tab">Server Status</a>
         </div>
 
         <div class="content">
             <?php if ($error): ?>
-                <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+                <div class="alert alert-error"><?php echo htmlspecialchars(
+                    $error,
+                ); ?></div>
             <?php endif; ?>
 
             <?php if ($success): ?>
-                <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
+                <div class="alert alert-success"><?php echo htmlspecialchars(
+                    $success,
+                ); ?></div>
             <?php endif; ?>
 
-            <div class="tab-content <?php echo $tab === 'employees' ? 'active' : ''; ?>">
-                <?php if ($action === 'add_employee' || $action === 'edit_employee'): ?>
-                    <h2><?php echo $action === 'add_employee' ? 'Add Employee' : 'Edit Employee'; ?></h2>
+            <div class="tab-content <?php echo $tab === "employees"
+                ? "active"
+                : ""; ?>">
+                <?php if (
+                    $action === "add_employee" ||
+                    $action === "edit_employee"
+                ): ?>
+                    <h2><?php echo $action === "add_employee"
+                        ? "Add Employee"
+                        : "Edit Employee"; ?></h2>
                     <form method="POST">
                         <?php echo getCSRFField(); ?>
-                        <input type="hidden" name="action" value="<?php echo $action === 'add_employee' ? 'add_employee' : 'update_employee'; ?>">
-                        <?php if ($action === 'edit_employee' && $editRecord): ?>
-                            <input type="hidden" name="old_employee_id" value="<?php echo htmlspecialchars($editRecord['employee_id']); ?>">
+                        <input type="hidden" name="action" value="<?php echo $action ===
+                        "add_employee"
+                            ? "add_employee"
+                            : "update_employee"; ?>">
+                        <?php if (
+                            $action === "edit_employee" &&
+                            $editRecord
+                        ): ?>
+                            <input type="hidden" name="old_employee_id" value="<?php echo htmlspecialchars(
+                                $editRecord["employee_id"],
+                            ); ?>">
                         <?php endif; ?>
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="employee_id">Employee ID:</label>
                                 <input type="text" id="employee_id" name="employee_id" required
-                                       value="<?php echo htmlspecialchars($editRecord['employee_id'] ?? ''); ?>">
+                                       value="<?php echo htmlspecialchars(
+                                           $editRecord["employee_id"] ?? "",
+                                       ); ?>">
                             </div>
                             <div class="form-group">
                                 <label for="name">Name:</label>
                                 <input type="text" id="name" name="name" required
-                                       value="<?php echo htmlspecialchars($editRecord['name'] ?? ''); ?>">
+                                       value="<?php echo htmlspecialchars(
+                                           $editRecord["name"] ?? "",
+                                       ); ?>">
                             </div>
                         </div>
 
-                        <button type="submit" class="button-primary"><?php echo $action === 'add_employee' ? 'Add Employee' : 'Update Employee'; ?></button>
+                        <button type="submit" class="button-primary"><?php echo $action ===
+                        "add_employee"
+                            ? "Add Employee"
+                            : "Update Employee"; ?></button>
                         <a href="?tab=employees" class="button-secondary">Cancel</a>
                     </form>
                 <?php else: ?>
@@ -370,17 +435,32 @@ $editRecord = $editRecord ?? null;
                                 <tbody>
                                     <?php foreach ($records as $record): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($record['employee_id']); ?></td>
-                                            <td><?php echo htmlspecialchars($record['name']); ?></td>
-                                            <td><?php echo htmlspecialchars(calculateHoursWorked($conn, $record['employee_id'])); ?> hours</td>
+                                            <td><?php echo htmlspecialchars(
+                                                $record["employee_id"],
+                                            ); ?></td>
+                                            <td><?php echo htmlspecialchars(
+                                                $record["name"],
+                                            ); ?></td>
+                                            <td><?php echo htmlspecialchars(
+                                                calculateHoursWorked(
+                                                    $conn,
+                                                    $record["employee_id"],
+                                                ),
+                                            ); ?> hours</td>
                                             <td>
                                                 <div class="action-buttons">
-                                                    <a href="?tab=employees&action=edit_employee&employee_id=<?php echo urlencode($record['employee_id']); ?>" class="edit-btn">Edit</a>
+                                                    <a href="?tab=employees&action=edit_employee&employee_id=<?php echo urlencode(
+                                                        $record["employee_id"],
+                                                    ); ?>" class="edit-btn">Edit</a>
                                                     <form method="POST" style="display: inline;"
                                                           onsubmit="return confirm('Are you sure you want to delete this employee?');">
                                                         <?php echo getCSRFField(); ?>
                                                         <input type="hidden" name="action" value="delete_employee">
-                                                        <input type="hidden" name="employee_id" value="<?php echo htmlspecialchars($record['employee_id']); ?>">
+                                                        <input type="hidden" name="employee_id" value="<?php echo htmlspecialchars(
+                                                            $record[
+                                                                "employee_id"
+                                                            ],
+                                                        ); ?>">
                                                         <button type="submit" class="delete-btn">Delete</button>
                                                     </form>
                                                 </div>
@@ -394,47 +474,69 @@ $editRecord = $editRecord ?? null;
                 <?php endif; ?>
             </div>
 
-            <div class="tab-content <?php echo $tab === 'logs' ? 'active' : ''; ?>">
-                <?php if ($action === 'add_log' || $action === 'edit_log'): ?>
-                    <h2><?php echo $action === 'add_log' ? 'Add Attendance Log' : 'Edit Attendance Log'; ?></h2>
+            <div class="tab-content <?php echo $tab === "logs"
+                ? "active"
+                : ""; ?>">
+                <?php if ($action === "add_log" || $action === "edit_log"): ?>
+                    <h2><?php echo $action === "add_log"
+                        ? "Add Attendance Log"
+                        : "Edit Attendance Log"; ?></h2>
                     <form method="POST">
                         <?php echo getCSRFField(); ?>
-                        <input type="hidden" name="action" value="<?php echo $action === 'add_log' ? 'add_log' : 'update_log'; ?>">
-                        <?php if ($action === 'edit_log' && $editRecord): ?>
-                            <input type="hidden" name="id" value="<?php echo htmlspecialchars($editRecord['id']); ?>">
+                        <input type="hidden" name="action" value="<?php echo $action ===
+                        "add_log"
+                            ? "add_log"
+                            : "update_log"; ?>">
+                        <?php if ($action === "edit_log" && $editRecord): ?>
+                            <input type="hidden" name="id" value="<?php echo htmlspecialchars(
+                                $editRecord["id"],
+                            ); ?>">
                         <?php endif; ?>
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="log_employee_id">Employee ID:</label>
                                 <input type="text" id="log_employee_id" name="employee_id" required
-                                       value="<?php echo htmlspecialchars($editRecord['employee_id'] ?? ''); ?>">
+                                       value="<?php echo htmlspecialchars(
+                                           $editRecord["employee_id"] ?? "",
+                                       ); ?>">
                             </div>
                             <div class="form-group">
                                 <label for="log_name">Name:</label>
                                 <input type="text" id="log_name" name="name" required
-                                       value="<?php echo htmlspecialchars($editRecord['name'] ?? ''); ?>">
+                                       value="<?php echo htmlspecialchars(
+                                           $editRecord["name"] ?? "",
+                                       ); ?>">
                             </div>
                             <div class="form-group">
                                 <label for="log_date">Date:</label>
                                 <input type="date" id="log_date" name="date" required
-                                       value="<?php echo htmlspecialchars($editRecord['date'] ?? ''); ?>">
+                                       value="<?php echo htmlspecialchars(
+                                           $editRecord["date"] ?? "",
+                                       ); ?>">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="log_time_in">Time In:</label>
                                 <input type="time" id="log_time_in" name="time_in" required
-                                       value="<?php echo htmlspecialchars($editRecord['time_in'] ?? ''); ?>">
+                                       value="<?php echo htmlspecialchars(
+                                           $editRecord["time_in"] ?? "",
+                                       ); ?>">
                             </div>
                             <div class="form-group">
                                 <label for="log_time_out">Time Out:</label>
                                 <input type="time" id="log_time_out" name="time_out"
-                                       value="<?php echo htmlspecialchars($editRecord['time_out'] ?? ''); ?>">
+                                       value="<?php echo htmlspecialchars(
+                                           $editRecord["time_out"] ?? "",
+                                       ); ?>">
                             </div>
                         </div>
 
-                        <button type="submit" class="button-primary"><?php echo $action === 'add_log' ? 'Add Log' : 'Update Log'; ?></button>
+                        <button type="submit" class="button-primary"><?php echo $action ===
+                        "add_log"
+                            ? "Add Log"
+                            : "Update Log"; ?></button>
                         <a href="?tab=logs" class="button-secondary">Cancel</a>
                     </form>
                 <?php else: ?>
@@ -464,20 +566,36 @@ $editRecord = $editRecord ?? null;
                                 <tbody>
                                     <?php foreach ($records as $record): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($record['employee_id']); ?></td>
-                                            <td><?php echo htmlspecialchars($record['name']); ?></td>
-                                            <td><?php echo htmlspecialchars($record['date']); ?></td>
-                                            <td><?php echo htmlspecialchars($record['time_in'] ?? '-'); ?></td>
-                                            <td><?php echo htmlspecialchars($record['time_out'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars(
+                                                $record["employee_id"],
+                                            ); ?></td>
+                                            <td><?php echo htmlspecialchars(
+                                                $record["name"],
+                                            ); ?></td>
+                                            <td><?php echo htmlspecialchars(
+                                                $record["date"],
+                                            ); ?></td>
+                                            <td><?php echo htmlspecialchars(
+                                                $record["time_in"] ?? "-",
+                                            ); ?></td>
+                                            <td><?php echo htmlspecialchars(
+                                                $record["time_out"] ?? "-",
+                                            ); ?></td>
                                             <td>
                                                 <div class="action-buttons">
-                                                    <?php if (!empty($record['id'])): ?>
-                                                        <a href="?tab=logs&action=edit_log&id=<?php echo urlencode($record['id']); ?>" class="edit-btn">Edit</a>
+                                                    <?php if (
+                                                        !empty($record["id"])
+                                                    ): ?>
+                                                        <a href="?tab=logs&action=edit_log&id=<?php echo urlencode(
+                                                            $record["id"],
+                                                        ); ?>" class="edit-btn">Edit</a>
                                                         <form method="POST" style="display: inline;"
                                                               onsubmit="return confirm('Are you sure you want to delete this log?');">
                                                             <?php echo getCSRFField(); ?>
                                                             <input type="hidden" name="action" value="delete_log">
-                                                            <input type="hidden" name="id" value="<?php echo htmlspecialchars($record['id']); ?>">
+                                                            <input type="hidden" name="id" value="<?php echo htmlspecialchars(
+                                                                $record["id"],
+                                                            ); ?>">
                                                             <button type="submit" class="delete-btn">Delete</button>
                                                         </form>
                                                     <?php else: ?>
@@ -495,8 +613,10 @@ $editRecord = $editRecord ?? null;
             </div>
 
             <!-- ADMIN ACCOUNTS TAB -->
-            <div class="tab-content <?php echo $tab === 'admins' ? 'active' : ''; ?>">
-                <?php if ($action === 'add_admin'): ?>
+            <div class="tab-content <?php echo $tab === "admins"
+                ? "active"
+                : ""; ?>">
+                <?php if ($action === "add_admin"): ?>
                     <h2>Add Admin Account</h2>
                     <form method="POST">
                         <?php echo getCSRFField(); ?>
@@ -541,16 +661,29 @@ $editRecord = $editRecord ?? null;
                                 <tbody>
                                     <?php foreach ($records as $record): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($record['username'] ?? 'Unknown'); ?></td>
-                                            <td><?php echo htmlspecialchars($record['created_at'] ?? 'Unknown'); ?></td>
-                                            <td><?php echo htmlspecialchars($record['last_login'] ?? 'Never'); ?></td>
+                                            <td><?php echo htmlspecialchars(
+                                                $record["username"] ??
+                                                    "Unknown",
+                                            ); ?></td>
+                                            <td><?php echo htmlspecialchars(
+                                                $record["created_at"] ??
+                                                    "Unknown",
+                                            ); ?></td>
+                                            <td><?php echo htmlspecialchars(
+                                                $record["last_login"] ??
+                                                    "Never",
+                                            ); ?></td>
                                             <td>
-                                                <?php if (!empty($record['id'])): ?>
+                                                <?php if (
+                                                    !empty($record["id"])
+                                                ): ?>
                                                     <form method="POST" style="display: inline;"
                                                           onsubmit="return confirm('Are you sure you want to delete this admin account?');">
                                                         <?php echo getCSRFField(); ?>
                                                         <input type="hidden" name="action" value="delete_admin">
-                                                        <input type="hidden" name="id" value="<?php echo htmlspecialchars($record['id']); ?>">
+                                                        <input type="hidden" name="id" value="<?php echo htmlspecialchars(
+                                                            $record["id"],
+                                                        ); ?>">
                                                         <button type="submit" class="delete-btn">Delete</button>
                                                     </form>
                                                 <?php endif; ?>
